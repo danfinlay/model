@@ -521,6 +521,42 @@ tests = {
     });
   }
 
+, 'test eager fetching with skip': function (next) {
+    model.Schedule.all(function (err, schedules) {
+      if (err) { throw err; }
+      // Grab the first five items
+      var scheduleList = schedules.slice(0, 5);
+      model.FunActivity.all({}, {sort: {id: 'desc'}}, function (err, activities) {
+        if (err) { throw err; }
+        // Give each schedule item four associated FunActivities
+        var interval = 4
+          , start = 0
+          , end = 4;
+        scheduleList.forEach(function (schedule) {
+          activities.slice(start, end).forEach(function (activity) {
+            schedule.addFunActivity(activity);
+          });
+          start += interval;
+          end += interval;
+        });
+        helpers.updateItems(scheduleList, function (err) {
+          if (err) { throw err; }
+
+          model.Schedule.all({}, {
+            includes: 'funActivities',
+            limit: 2,
+            skip: 2,
+            sort: {'createdAt':'asc'}
+          }, function (err, results) {
+            if (err) { throw err; }
+            assert.equal(2, results.length, 'Two results should remain');
+            next();
+          });
+        });
+      });
+    });
+  }
+
 };
 
 module.exports = tests;
