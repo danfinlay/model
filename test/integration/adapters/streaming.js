@@ -31,10 +31,20 @@ tests = {
       , incr = 0
       , letters = 'abcdefghijklmnopqrst'.split('');
     processor = model.Person.all({}, {sort: 'title'});
+
     processor.on('data', function (item) {
       assert.equal(letters[incr], item.title);
       incr++;
     });
+    processor.on('end', next);
+  }
+
+, 'test pause and resume method presence': function (next) {
+    var processor = model.Person.all({}, {sort: 'title'});
+
+    assert(processor.pause, 'processor has pause method');
+    assert(processor.resume, 'processor has resume method');
+    
     processor.on('end', next);
   }
 
